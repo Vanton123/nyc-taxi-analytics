@@ -1,8 +1,5 @@
 # 🚕 NYC Yellow Taxi Analytics — Phân tích Vận hành & Tối ưu Doanh thu (01/2026)
 
-[https://img.shields.io/badge/Python-Pandas%20%7C%20PyArrow%20%7C%20SQLAlchemy-3776AB?style=flat&logo=python&logoColor=white]
-[https://img.shields.io/badge/PostgreSQL-SQL%20%7C%20Window%20Functions-336791?style=flat&logo=postgresql&logoColor=white]
-[https://img.shields.io/badge/Power%20BI-Star%20Schema%20%7C%20DAX-F2C811?style=flat&logo=powerbi&logoColor=black]
 
 > **Tóm tắt nhanh (Executive Summary):** Dự án phân tích dữ liệu End-to-End trên **3,72 triệu bản ghi chuyến xe taxi thực tế** tại thành phố New York (tháng 01/2026). Dự án giải quyết bài toán kiểm soát chất lượng dữ liệu giao dịch quy mô lớn, xây dựng mô hình **Star Schema** chuẩn hóa, đo lường hiệu suất sinh lời theo giờ (**`Revenue per Trip Hour`**) và định lượng tác động của **cơn bão tuyết ngày 25–26/01/2026** đến vận hành toàn đội xe.
 
