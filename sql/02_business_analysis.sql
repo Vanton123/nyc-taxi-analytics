@@ -58,8 +58,12 @@ where tc.is_valid_trip = True
 group by tc.PULocationID,tz.borough,tz.zone,tz.service_zone
 order by total_trip desc,total_revenue desc, pct_revenue desc;
 
--- Manhattan vùng South(Yellow Zone) có số lượng chuyến đi nhiều nhất: 160168 với tổng doan thu 3432837.13 chiếm khoảng 3.16% tỉ lệ doanh thu
--- Queens thuộc JFK Airports có số chuyến đi gần bằng 151898 với tổng doanh thu 11095675.54 chiếm khoảng 10.20% tỉ lệ doanh thu
+-- Manhattan vùng Upper East Side(Yellow Zone) có số lượng chuyến đi nhiều nhất: (157526,151661) với tổng doan thu (3432837.13,3440591.10) chiếm khoảng 6.32% tỉ lệ doanh thu
+-- Mahattan: Midtown Center có số lượng chuyến đi khoảng 143432 với tổng doanh thu 3864622.38 chiếm 3.55 
+-- Queens: JFK Airports có số chuyến đi gần bằng 138506 với tổng doanh thu 11095675.54 chiếm khoảng 10.20% tỉ lệ doanh thu
+-- Queens:  LaGuardia Airport có số chuyến đi gần bằng 81400 với tổng doanh thu 5659540.12 chiếm khoảng 5.20% tỉ lệ doanh thu
+--> 3 vùng Manhattan đứng đầu chiếm 9,87% tỉ trọng doanh thu trong tháng 1
+--> Chỉ với 2 sân bay thuộc Queens Chiếm tới 15.40 tổng doanh thu tháng 1
 
 
 select
@@ -101,7 +105,7 @@ join taxi_zones as tz
 where tc.is_valid_trip = True and tz.borough='Manhattan'
 group by extract(hour from tpep_pickup_datetime), tz.borough
 order by total_revenue desc, total_trip desc;
--- Manhattan có số lượng chuyến đi và doanh thu nhiều nhất trong khoảng từ 16h đến 21h
+-- Manhattan có số lượng chuyến đi và doanh thu nhiều nhất trong khoảng từ 15h đến 21h
 
 
 -----------------------------------------------------------------------------------------
@@ -168,32 +172,6 @@ order by total_eachPayment desc;
 
 
 
--- The final rate code in effect at the end of the trip. 
--- 1 = Standard rate 
--- 2 = JFK 
--- 3 = Newark 
--- 4 = Nassau or Westchester 
--- 5 = Negotiated fare 
--- 6 = Group ride 
--- 99 = Null/unknown 
--- Update them cot để dễ dàng phân biệt và chuẩn hóa dữ liếu
-ALTER TABLE trips_clean
-ADD COLUMN rate_code_name TEXT;
-
-UPDATE trips_clean
-SET rate_code_name =
-    CASE
-        WHEN ratecodeid = 1 THEN 'Standard rate'
-        WHEN ratecodeid = 2 THEN 'JFK'
-        WHEN ratecodeid = 3 THEN 'Newark'
-        WHEN ratecodeid = 4 THEN 'Nassau or Westchester'
-        WHEN ratecodeid = 5 THEN 'Negotiated fare'
-        WHEN ratecodeid = 6 THEN 'Group ride'
-        WHEN ratecodeid = 99 THEN 'Unknown'
-        WHEN ratecodeid IS NULL THEN 'Not recorded'
-        ELSE 'Other'
-    END;
-
 
 select ratecodeid, count(*) as total_trip,
 round(
@@ -209,4 +187,3 @@ group by ratecodeid;
 -- Standard rate có số chuyến lớn nhất, chiếm 63.69% tổng số dòng trong kết quả.
 -- Điều này cho thấy phần lớn chuyến taxi được ghi nhận theo mức giá tiêu chuẩn.
 
--- 29.81% số chuyến có ratecodeid = NULL, và theo kết quả kiểm tra trước đó, toàn bộ thuộc payment_type = 0 (Flex Fare).
