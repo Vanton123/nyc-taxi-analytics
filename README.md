@@ -1,7 +1,7 @@
 # 🚕 NYC Yellow Taxi Analytics — Phân tích Vận hành & Tối ưu Doanh thu (01/2026)
 
 
-> **Tóm tắt nhanh (Executive Summary):** Dự án phân tích dữ liệu End-to-End trên **3,72 triệu bản ghi chuyến xe taxi thực tế** tại thành phố New York (tháng 01/2026). Dự án giải quyết bài toán kiểm soát chất lượng dữ liệu giao dịch quy mô lớn, xây dựng mô hình **Star Schema** chuẩn hóa, đo lường hiệu suất sinh lời theo giờ (**`Revenue per Trip Hour`**) và định lượng tác động của **cơn bão tuyết ngày 25–26/01/2026** đến vận hành toàn đội xe.
+> **Tóm tắt nhanh (Executive Summary):** Dự án phân tích dữ liệu End-to-End trên **3,72 triệu bản ghi chuyến xe taxi thực tế** tại thành phố New York (tháng 01/2026). Dự án giải quyết bài toán kiểm soát chất lượng dữ liệu giao dịch quy mô lớn, xây dựng mô hình **Star Schema** chuẩn hóa.
 
 ---
 
@@ -11,9 +11,8 @@
 3. [Quy trình Thực hiện & Đối soát Dữ liệu](#3-quy-trình-thực-hiện-end-to-end-pipeline)
 4. [Cấu trúc Thư mục Dự án](#4-cấu-trúc-thư-mục-dự-án)
 5. [Từ điển KPI & Công thức DAX](#5-từ-điển-kpi--thư-viện-dax-measures)
-6. [Tổng quan Dashboard Power BI](#6-tổng-quan-dashboard-power-bi)
-7. [Phát hiện Kinh doanh Cốt lõi (Key Insights)](#7-phát-hiện-kinh-doanh-cốt-lõi-key-business-insights)
-8. [Khuyến nghị Hành động (Recommendations)](#8-khuyến-nghị-hành-động-actionable-recommendations)
+6. [Phát hiện Kinh doanh Cốt lõi (Key Insights)](#6-phát-hiện-kinh-doanh-cốt-lõi-key-business-insights)
+7. [Khuyến nghị Hành động (Recommendations)](#7-khuyến-nghị-hành-động-actionable-recommendations)
 
 ---
 
@@ -87,7 +86,7 @@ Nguồn dữ liệu chính thức từ **[NYC Taxi & Limousine Commission (TLC) 
 
 ```text
 NYC-Taxi-Project/
-├── data/                           # Đã ẩn qua .gitignore (raw parquet & processed)
+├── data/                          
 ├── notebook/
 │   ├── 01_data_exploration.ipynb   # Khám phá phân phối & phát hiện bất thường
 │   ├── 02_data_quality_checks.ipynb# Kiểm toán NULL có cấu trúc & đối xứng dòng âm
@@ -134,7 +133,7 @@ ADDCOLUMNS(
 
 -- 2. Nhóm Measures Tài chính & Sản lượng
 Total_Revenue = CALCULATE(SUM('public trips_clean'[total_amount]), 'public trips_clean'[is_valid_trip] = TRUE())
-Total Trip = CALCULATE(COUNTROWS('public trips_clean'), 'public trips_clean'[is_valid_trip] = TRUE())
+Total Trip = CALCULATE(count('public trips_clean'[vendorid]),'public trips_clean'[is_valid_trip]=TRUE()) 
 avgValue_perTrip = DIVIDE([Total_Revenue], [Total Trip], 0)
 
 -- 3. Cấu phần Doanh thu (Revenue Breakdown)
@@ -146,10 +145,16 @@ Surcharges & Taxes = [Total_Revenue] - [Base Fare] - [Tip Amount]
 Airport Revenue Share = 
 COALESCE(
     DIVIDE(
-        CALCULATE([Total_Revenue], 'public taxi_zones'[service_zone] = "Airports"),
-        CALCULATE([Total_Revenue], REMOVEFILTERS('public taxi_zones'[service_zone], 'public taxi_zones'[zone]))
-    ), 0
-)
+    CALCULATE(
+        [Total_Revenue],'public taxi_zones'[service_zone]="Airports"
+        ),
+        CALCULATE(
+            [Total_Revenue],
+            REMOVEFILTERS('public taxi_zones'[service_zone],'public taxi_zones'[borough],'public taxi_zones'[zone])
+                )
+            ),
+            0
+        )
 
 Avg Daily Revenue = AVERAGEX(VALUES('Dim_Date'[Date]), [Total_Revenue])
 
@@ -175,24 +180,25 @@ CALCULATE(
 
 ---
 
-## 6. Tổng quan Dashboard Power BI
 
-### Trang 1: Executive Overview
-[powerbi/screenshots/overview.png]
 
-### Trang 2: Geographic & Hourly Yield Analysis
-[powerbi/screenshots/geographic.png]
-
-### Trang 3: Temporal Patterns & Demand Heatmap
-[powerbi/screenshots/time.png]
-
-### Sơ đồ Mô hình Dữ liệu (Star Schema)
-[powerbi/screenshots/model_view.png]
-
----
-
-## 7. Phát hiện Kinh doanh Cốt lõi (Key Business Insights)
-
+## 6. Phát hiện Kinh doanh Cốt lõi (Key Business Insights)
+Tổng quan: Tình hình Nyc taxi ở tháng 1:
+* $108 771 809,89 trong tháng 1/2026 với khoảng 3648273 chuyến đi taxi
+* Nhu cầu taxi và doanh thu tập trung nhiều vào khung giờ từ 15:00 đến 19:00,cho thấy hoạt động taxi có xu hướng tăng cao vào buổi chiều và đầu buổi tối
+* Manhattan vùng Upper East Side(Yellow Zone) có số lượng chuyến đi nhiều nhất: (157526,151661) với tổng doan thu (3432837.13,3440591.10) chiếm khoảng 6.32% tỉ lệ doanh thu
+* Mahattan: Midtown Center có số lượng chuyến đi khoảng 143432 với tổng doanh thu 3864622.38 chiếm 3.55 
+* Queens: JFK Airports có số chuyến đi gần bằng 138506 với tổng doanh thu 11095675.54 chiếm khoảng 10.20% tỉ lệ doanh thu
+* Queens:  LaGuardia Airport có số chuyến đi gần bằng 81400 với tổng doanh thu 5659540.12 chiếm khoảng 5.20% tỉ lệ doanh thu
+* Manhattan có số lượng chuyến đi và doanh thu nhiều nhất trong khoảng từ 15h đến 21h
+* Chuyến đi từ sân bay JFK Airport có nhiều chuyến nhất vào khoảng 15h đến 22h
+* Chuyến đi từ sân bay LaGuardia Airport có nhiều chuyến nhất vào khoảng 14h đến 21h
+**--> 3 vùng Manhattan đứng đầu chiếm 9,87% tỉ trọng doanh thu trong tháng 1**
+**--> Chỉ với 2 sân bay thuộc Queens Chiếm tới 15.40 tổng doanh thu tháng 1**
+* Phương thức credit card chiếm phần lớn số lượng các phương thức thanh toán khác: 2248934 (61.64%)
+* Standard rate có số chuyến lớn nhất, chiếm 63.69% tổng số dòng trong kết quả.
+**--> Điều này cho thấy phần lớn chuyến taxi được ghi nhận theo mức giá tiêu chuẩn.**
+  
 1. **Nghịch lý Giá cước vs. Hiệu suất Giờ tại Manhattan (Penn Station vs. Upper East Side):**
    * Dù khu vực **Penn Station / Madison Sq West** có giá trị bình quân mỗi chuyến (**`$25,86`**) cao hơn **Upper East Side South** (**`$21,79`**), nhưng tình trạng ùn tắc quanh nhà ga kéo hiệu suất **`Revenue per Trip Hour`** của Penn Station xuống còn **`$97,63/giờ`** — thấp hơn **9,0%** so với **Upper East Side South (`$107,28/giờ`)** và **Lincoln Square East (`$107,57/giờ`)**.
 2. **Sân bay là "Mỏ vàng" về Hiệu suất Sinh lời theo Thời gian:**
@@ -208,8 +214,8 @@ CALCULATE(
 
 ---
 
-## 8. Khuyến nghị Hành động (Actionable Recommendations)
+## 7. Khuyến nghị Hành động (Actionable Recommendations)
 
-1. **Tái phân bổ đội xe nội đô giờ cao điểm chiều (`15:00 – 19:00`):** Hướng dẫn tài xế ưu tiên khai thác các chuyến quay vòng nhanh tại trục **Upper East Side South/North** và **Lincoln Square East (`$105–$108/giờ`)** thay vì xếp hàng tại nút thắt kẹt xe **Penn Station (`$97,63/giờ`)**.
+1. **Tái phân bổ đội xe nội đô giờ cao điểm chiều (`15:00 – 21:00`):** Hướng dẫn tài xế ưu tiên khai thác các chuyến quay vòng nhanh tại trục **Upper East Side South/North** và **Lincoln Square East (`$105–$108/giờ`)** thay vì xếp hàng tại nút thắt kẹt xe **Penn Station (`$97,63/giờ`)**.
 2. **Tập trung năng lực đón khách tại Cửa ngõ Sân bay theo khung giờ vàng:** Bố trí ca trực đón khách tại **LaGuardia (`14:00 – 21:00`)** và **JFK (`15:00 – 22:00`)** nhằm tối đa hóa hiệu suất **`$124,30/giờ`**.
-3. **Chuẩn hóa quy trình kiểm soát dữ liệu tự động (Automated ETL Guardrails):** Duy trì cố định cờ `is_flex_fare` và `is_valid_trip` ở tầng Database để nhóm dữ liệu app khuyết trường (`29,81%`) và giao dịch đảo (`1,92%`) không làm sai lệch báo cáo tài chính định kỳ.
+
