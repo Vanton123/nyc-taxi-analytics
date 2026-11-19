@@ -187,3 +187,4 @@ group by ratecodeid;
 -- Standard rate có số chuyến lớn nhất, chiếm 63.69% tổng số dòng trong kết quả.
 -- Điều này cho thấy phần lớn chuyến taxi được ghi nhận theo mức giá tiêu chuẩn.
 
+-- 29.81% số chuyến có ratecodeid = NULL, và theo kết quả kiểm tra trước đó, toàn bộ thuộc payment_type = 0 (Flex Fare).
